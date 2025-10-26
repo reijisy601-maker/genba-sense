@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="現場感覚 - 現場が使えるWebをつくる">
+    <title>現場感覚</title>
+    
+    <style>
+        :root {
+            --color-text: #1a1a2e;
+            --color-text-light: #5a6c7d;
+            --color-background: #fafbfc;
+            --color-accent: #4a90e2;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-text: #e8eaed;
+                --color-text-light: #9aa0a6;
+                --color-background: #0f1419;
+                --color-accent: #6bb6ff;
+            }
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+            color: var(--color-text);
+            background-color: var(--color-background);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+        
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+        
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, 
+                rgba(74, 144, 226, 0.03), 
+                rgba(107, 182, 255, 0.05), 
+                rgba(74, 144, 226, 0.03));
+            background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite;
+        }
+        
+        @keyframes gradientFlow {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            .gradient-bg {
+                background: linear-gradient(45deg, 
+                    rgba(74, 144, 226, 0.05), 
+                    rgba(107, 182, 255, 0.08), 
+                    rgba(74, 144, 226, 0.05));
+                background-size: 400% 400%;
+            }
+        }
+        
+        main {
+            text-align: center;
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            padding: 0 2rem;
+        }
+        
+        .logo-container {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 10;
+            margin: 0;
+        }
+        
+        .logo-image {
+            width: clamp(96px, 17vw, 170px);
+            height: auto;
+            display: block;
+        }
+        
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.04em;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif;
+            line-height: 1.1;
+            color: var(--color-text);
+            display: none;
+        }
+        
+        .tagline {
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            color: var(--color-text-light);
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
+            margin-top: 0;
+            opacity: 0.85;
+        }
+        
+        p {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: var(--color-text-light);
+            font-weight: 400;
+        }
+        
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: var(--color-text-light);
+            padding: 1.618rem 0;
+            width: 100%;
+            z-index: 1;
+            opacity: 0.6;
+        }
+        
+        footer p {
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg"></div>
+    <canvas id="neural-canvas"></canvas>
+    <div class="logo-container">
+        <img src="https://raw.githubusercontent.com/reijisy601-maker/genba-sense/main/logo.png" alt="現場感覚 Genba Sense" class="logo-image">
+    </div>
+    <main>
+        <h1>現場感覚</h1>
+        <p class="tagline">現場が使えるWebをつくる</p>
+    </main>
+    <footer>
+        <p>&copy; 2025 現場感覚 All rights reserved.</p>
+    </footer>
+    
+    <script>
+        'use strict';
+        
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Canvas サイズ設定
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // ダークモード検出
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const nodeColor = isDarkMode ? 'rgba(107, 182, 255, 0.25)' : 'rgba(74, 144, 226, 0.3)';
+        const lineColor = isDarkMode ? 'rgba(107, 182, 255, 0.08)' : 'rgba(74, 144, 226, 0.08)';
+        const glowColor = isDarkMode ? 'rgba(107, 182, 255, 0.15)' : 'rgba(74, 144, 226, 0.15)';
+        
+        // ノードクラス
+        class Node {
+            constructor(x, y) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = nodeColor;
+                ctx.fill();
+                
+                // グロー効果（控えめ）
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = glowColor;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        // ノード配列
+        const nodes = [];
+        const nodeCount = Math.floor((canvas.width * canvas.height) / 15000);
+        for (let i = 0; i < nodeCount; i++) {
+            nodes.push(new Node());
+        }
+        
+        // マウス位置
+        let mouseNode = { x: null, y: null };
+        
+        canvas.addEventListener('mousemove', (e) => {
+            mouseNode.x = e.clientX;
+            mouseNode.y = e.clientY;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            mouseNode.x = null;
+            mouseNode.y = null;
+        });
+        
+        // 線を描画
+        function drawLines() {
+            const maxDistance = 150;
+            
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dx = nodes[i].x - nodes[j].x;
+                    const dy = nodes[i].y - nodes[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < maxDistance) {
+                        const opacity = (1 - distance / maxDistance) * 0.15;
+                        ctx.strokeStyle = lineColor.replace('0.08', opacity);
+                        ctx.lineWidth = 0.3;
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+                
+                // マウスとの接続
+                if (mouseNode.x !== null) {
+                    const dx = nodes[i].x - mouseNode.x;
+                    const dy = nodes[i].y - mouseNode.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 200) {
+                        const opacity = (1 - distance / 200) * 0.3;
+                        ctx.strokeStyle = nodeColor.replace(isDarkMode ? '0.25' : '0.3', opacity);
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(mouseNode.x, mouseNode.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+        
+        // アニメーションループ
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawLines();
+            
+            nodes.forEach(node => {
+                node.update();
+                node.draw();
+            });
+            
+            // マウスノード描画（控えめ）
+            if (mouseNode.x !== null) {
+                ctx.beginPath();
+                ctx.arc(mouseNode.x, mouseNode.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = nodeColor;
+                ctx.fill();
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = glowColor;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
