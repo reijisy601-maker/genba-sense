@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="現場感覚 - 現場が使えるWebをつくる">
-    <title>現場感覚</title>
+    <title>現場感覚 | Genba Sense</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --color-text: #1a1a2e;
             --color-text-light: #5a6c7d;
             --color-background: #fafbfc;
+            --color-surface: #ffffff;
             --color-accent: #4a90e2;
+            --color-border: #e1e8ed;
         }
         
         @media (prefers-color-scheme: dark) {
@@ -19,7 +25,9 @@
                 --color-text: #e8eaed;
                 --color-text-light: #9aa0a6;
                 --color-background: #0f1419;
+                --color-surface: #1a1f2e;
                 --color-accent: #6bb6ff;
+                --color-border: #2f3640;
             }
         }
         
@@ -29,168 +37,673 @@
             box-sizing: border-box;
         }
         
-        html, body {
-            height: 100%;
-            overflow: hidden;
+        html {
+            scroll-behavior: smooth;
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: var(--color-text);
-            background-color: var(--color-background);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 0;
+            background-color: #05070a;
             line-height: 1.7;
             -webkit-font-smoothing: antialiased;
-            position: relative;
+            overflow-x: hidden;
         }
         
-        #neural-canvas {
+        /* カスタムカーソル（デスクトップのみ） */
+        .custom-cursor {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.15s ease-out;
         }
         
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .cursor-ring {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--color-accent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .cursor-ring.hover {
+            width: 60px;
+            height: 60px;
+        }
+        
+        @media (max-width: 768px) {
+            .custom-cursor {
+                display: none;
+            }
+        }
+        
+        /* 呼吸グラデーション背景 */
         .gradient-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1;
-            background: linear-gradient(45deg, 
-                rgba(74, 144, 226, 0.03), 
-                rgba(107, 182, 255, 0.05), 
-                rgba(74, 144, 226, 0.03));
-            background-size: 400% 400%;
-            animation: gradientFlow 15s ease infinite;
+            z-index: -2;
+            background: radial-gradient(ellipse at center,
+                rgba(20, 30, 48, 0.4) 0%,
+                rgba(5, 7, 10, 0.95) 70%,
+                #05070a 100%);
+            animation: breatheGradient 8s ease-in-out infinite;
         }
         
-        @keyframes gradientFlow {
-            0% {
-                background-position: 0% 50%;
+        @keyframes breatheGradient {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
             }
             50% {
-                background-position: 100% 50%;
+                transform: scale(1.05);
+                opacity: 0.9;
             }
-            100% {
-                background-position: 0% 50%;
-            }
+        }
+        
+        /* 微粒子Canvas */
+        #neural-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        /* フィルムグレイン */
+        .film-grain::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3OLi4ubm5uVlZWPj4+NjY19fX2JiYl/f39ra2uRkZGZmZlpaWmXl5dvb29xcXGTk5NnZ2c8TV1mAAAAG3RSTlNAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAvEOwtAAAAYklEQVRIx+3MyQEAIAwDMCVKO6z9/xMjEReI8gK9q2vtkywGbLOEGIZhTRqIZhrD4biIZiWiVotLrBptTad3pwiHyS9UPLLoSeYPMdcF8rgXkiB5ggxJ8h+qMMcws1Y3gCgdAAAAAElFTkSuQmCC');
+            opacity: 0.03;
+            pointer-events: none;
+            animation: grain 8s steps(10) infinite;
+        }
+        
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(-10px, -10px); }
+        }
+        
+        /* ヘッダー（デスクトップ） */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(250, 251, 252, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-border);
+            transition: transform 0.3s;
         }
         
         @media (prefers-color-scheme: dark) {
-            .gradient-bg {
-                background: linear-gradient(45deg, 
-                    rgba(74, 144, 226, 0.05), 
-                    rgba(107, 182, 255, 0.08), 
-                    rgba(74, 144, 226, 0.05));
-                background-size: 400% 400%;
+            .header {
+                background: rgba(15, 20, 25, 0.9);
             }
         }
         
-        main {
-            text-align: center;
+        .header.hidden {
+            transform: translateY(-100%);
+        }
+        
+        .header__container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header__logo {
+            height: 32px;
+        }
+        
+        .header__nav {
+            display: none;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+            .header__nav {
+                display: flex;
+            }
+        }
+        
+        .header__link {
+            color: var(--color-text-light);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            position: relative;
+            transition: color 0.2s;
+        }
+        
+        .header__link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--color-accent);
+            transition: width 0.3s;
+        }
+        
+        .header__link:hover {
+            color: var(--color-text);
+        }
+        
+        .header__link:hover::after {
             width: 100%;
-            max-width: 1200px;
+        }
+        
+        .hamburger {
             display: flex;
             flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        @media (min-width: 768px) {
+            .hamburger {
+                display: none;
+            }
+        }
+        
+        .hamburger__line {
+            width: 24px;
+            height: 2px;
+            background: var(--color-text);
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        
+        .hamburger.active .hamburger__line:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+        
+        .hamburger.active .hamburger__line:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger.active .hamburger__line:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        /* モバイルメニュー */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: var(--color-surface);
+            z-index: 999;
+            padding: 5rem 2rem;
+            transition: right 0.3s;
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mobile-menu.active {
+            right: 0;
+        }
+        
+        .mobile-menu__link {
+            display: block;
+            padding: 1rem 0;
+            color: var(--color-text);
+            text-decoration: none;
+            font-size: 1.2rem;
+            font-weight: 500;
+            border-bottom: 1px solid var(--color-border);
+            transition: color 0.2s;
+        }
+        
+        .mobile-menu__link:hover {
+            color: var(--color-accent);
+        }
+        
+        /* ヒーローセクション */
+        .hero {
+            min-height: 100vh;
+            display: flex;
             align-items: center;
             justify-content: center;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1;
-            padding: 0 2rem;
+            padding: 8rem 2rem 6rem;
+            position: relative;
+            background: #05070a;
         }
         
-        .logo-container {
-            position: fixed;
-            top: 1.5rem;
-            left: 1.5rem;
-            z-index: 10;
-            margin: 0;
+        @media (min-width: 768px) {
+            .hero {
+                padding: 6rem 2rem;
+            }
         }
         
-        .logo-image {
-            width: clamp(96px, 17vw, 170px);
-            height: auto;
-            display: block;
+        .hero__content {
+            max-width: 1400px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
         }
         
-        h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            letter-spacing: -0.04em;
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif;
-            line-height: 1.1;
+        /* 発光文字 */
+        .hero__glow-text {
+            font-size: clamp(1rem, 3vw, 1.8rem);
+            font-weight: 200;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: rgba(230, 240, 255, 0.9);
+            text-align: center;
+            text-shadow: 
+                0 0 10px rgba(107, 182, 255, 0.3),
+                0 0 20px rgba(107, 182, 255, 0.2),
+                0 0 30px rgba(107, 182, 255, 0.1);
+            opacity: 0;
+            animation: glowFadeIn 3s 1s ease-out forwards,
+                       glowPulse 6s 4s ease-in-out infinite;
+            line-height: 1.8;
+        }
+        
+        @keyframes glowFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% {
+                text-shadow: 
+                    0 0 10px rgba(107, 182, 255, 0.3),
+                    0 0 20px rgba(107, 182, 255, 0.2),
+                    0 0 30px rgba(107, 182, 255, 0.1);
+                opacity: 1;
+            }
+            50% {
+                text-shadow: 
+                    0 0 15px rgba(107, 182, 255, 0.5),
+                    0 0 30px rgba(107, 182, 255, 0.3),
+                    0 0 45px rgba(107, 182, 255, 0.2);
+                opacity: 0.95;
+            }
+        }
+        
+        .button {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+        }
+        
+        .button--primary {
+            background: var(--color-accent);
+            color: white;
+        }
+        
+        .button--primary:hover {
+            background: #3a7dc2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(74, 144, 226, 0.3);
+        }
+        
+        .button--secondary {
+            background: transparent;
             color: var(--color-text);
-            display: none;
+            border: 2px solid var(--color-border);
         }
         
-        .tagline {
-            font-size: clamp(1.2rem, 3vw, 1.8rem);
+        .button--secondary:hover {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            transform: translateY(-2px);
+        }
+        
+        /* セクション共通 */
+        .section {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        @media (min-width: 768px) {
+            .section {
+                padding: 6rem 2rem;
+            }
+        }
+        
+        .section__title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        
+        /* サービスカード */
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        
+        @media (min-width: 640px) {
+            .services-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .services-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        .service-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--color-accent);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .service-card__icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .service-card__title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .service-card__description {
             color: var(--color-text-light);
-            font-weight: 400;
-            letter-spacing: 0.08em;
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
-            margin-top: 0;
-            opacity: 0.85;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
         
-        p {
-            font-size: clamp(1rem, 2.5vw, 1.3rem);
+        /* フッター */
+        .footer {
+            background: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            padding: 3rem 2rem 6rem;
+            text-align: center;
+        }
+        
+        @media (min-width: 768px) {
+            .footer {
+                padding: 3rem 2rem 2rem;
+            }
+        }
+        
+        .footer__text {
             color: var(--color-text-light);
-            font-weight: 400;
+            font-size: 0.85rem;
         }
         
-        footer {
+        /* ボトムナビゲーション（モバイルのみ） */
+        .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            text-align: center;
-            color: var(--color-text-light);
-            padding: 1.618rem 0;
-            width: 100%;
-            z-index: 1;
-            opacity: 0.6;
+            background: var(--color-surface);
+            border-top: 1px solid var(--color-border);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 0.5rem 0;
+            z-index: 1000;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
         }
         
-        footer p {
+        @media (min-width: 768px) {
+            .bottom-nav {
+                display: none;
+            }
+        }
+        
+        .bottom-nav__item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            color: var(--color-text-light);
+            text-decoration: none;
             font-size: 0.7rem;
-            letter-spacing: 0.05em;
+            transition: color 0.2s;
+        }
+        
+        .bottom-nav__item.active,
+        .bottom-nav__item:hover {
+            color: var(--color-accent);
+        }
+        
+        .bottom-nav__icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* スクロールインジケーター */
+        .scroll-indicator {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            animation: bounce 2s infinite;
+        }
+        
+        @media (min-width: 768px) {
+            .scroll-indicator {
+                bottom: 3rem;
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+        
+        .scroll-indicator__line {
+            width: 1px;
+            height: 3rem;
+            background: var(--color-text-light);
+            margin: 0 auto;
+        }
+        
+        /* ユーティリティ */
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
+    <!-- カスタムカーソル -->
+    <div class="custom-cursor cursor-dot" id="cursorDot"></div>
+    <div class="custom-cursor cursor-ring" id="cursorRing"></div>
+    
+    <!-- 背景 -->
     <div class="gradient-bg"></div>
     <canvas id="neural-canvas"></canvas>
-    <div class="logo-container">
-        <img src="https://raw.githubusercontent.com/reijisy601-maker/genba-sense/main/logo.png" alt="現場感覚 Genba Sense" class="logo-image">
+    
+    <!-- ヘッダー -->
+    <header class="header" id="header">
+        <div class="header__container">
+            <img src="https://raw.githubusercontent.com/reijisy601-maker/genba-sense/main/logo.png" alt="現場感覚" class="header__logo">
+            <nav class="header__nav">
+                <a href="#home" class="header__link">ホーム</a>
+                <a href="#about" class="header__link">私たちについて</a>
+                <a href="#services" class="header__link">サービス</a>
+                <a href="#contact" class="header__link">お問い合わせ</a>
+            </nav>
+            <div class="hamburger" id="hamburger">
+                <span class="hamburger__line"></span>
+                <span class="hamburger__line"></span>
+                <span class="hamburger__line"></span>
+            </div>
+        </div>
+    </header>
+    
+    <!-- モバイルメニュー -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#home" class="mobile-menu__link">ホーム</a>
+        <a href="#about" class="mobile-menu__link">私たちについて</a>
+        <a href="#services" class="mobile-menu__link">サービス</a>
+        <a href="#contact" class="mobile-menu__link">お問い合わせ</a>
     </div>
+    
+    <!-- メインコンテンツ -->
     <main>
-        <h1>現場感覚</h1>
-        <p class="tagline">現場が使えるWebをつくる</p>
+        <!-- ヒーローセクション -->
+        <section class="hero film-grain" id="home">
+            <div class="hero__content">
+                <!-- 中央：発光文字 -->
+                <h1 class="hero__glow-text">Designed for the Field</h1>
+            </div>
+            <div class="scroll-indicator">
+                <div class="scroll-indicator__line"></div>
+            </div>
+        </section>
+        
+        <!-- Aboutセクション -->
+        <section class="section" id="about">
+            <h2 class="section__title">私たちについて</h2>
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <p style="font-size: 1.1rem; line-height: 1.8; color: var(--color-text-light);">
+                    中小企業・現場でも導入できる価格設定、実際に使いこなせる使いやすさ、フィードバックで改善し続ける柔軟性。<br><br>
+                    合わなければすぐやめられるサブスクリプション型で、現場の負担を最小限に。<br><br>
+                    「現場が使える」を最優先に、一緒に育てるWeb開発を提供します。
+                </p>
+            </div>
+        </section>
+        
+        <!-- サービスセクション -->
+        <section class="section" id="services">
+            <h2 class="section__title">サービス</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-card__icon">🎨</div>
+                    <h3 class="service-card__title">Webデザイン</h3>
+                    <p class="service-card__description">使いやすさと美しさを両立した、現場で実際に使われるデザインを提供します。</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-card__icon">⚡</div>
+                    <h3 class="service-card__title">Webアプリケーション開発</h3>
+                    <p class="service-card__description">業務効率化を実現する、柔軟でスケーラブルなアプリケーションを開発します。</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-card__icon">🔄</div>
+                    <h3 class="service-card__title">継続的改善サポート</h3>
+                    <p class="service-card__description">現場のフィードバックを活かし、常に最適な状態を保つサポートを提供します。</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- コンタクトセクション -->
+        <section class="section" id="contact">
+            <h2 class="section__title">お問い合わせ</h2>
+            <div style="max-width: 600px; margin: 0 auto; text-align: center;">
+                <p style="font-size: 1.1rem; margin-bottom: 2rem; color: var(--color-text-light);">
+                    プロジェクトのご相談、お見積もりなど、<br>お気軽にお問い合わせください。
+                </p>
+                <a href="mailto:contact@genba-sense.jp" class="button button--primary" style="display: inline-block;">
+                    メールで相談する
+                </a>
+            </div>
+        </section>
     </main>
-    <footer>
-        <p>&copy; 2025 現場感覚 All rights reserved.</p>
+    
+    <!-- フッター -->
+    <footer class="footer">
+        <p class="footer__text">&copy; 2025 現場感覚 All rights reserved.</p>
     </footer>
+    
+    <!-- ボトムナビゲーション -->
+    <nav class="bottom-nav">
+        <a href="#home" class="bottom-nav__item active">
+            <span class="bottom-nav__icon">🏠</span>
+            <span>ホーム</span>
+        </a>
+        <a href="#about" class="bottom-nav__item">
+            <span class="bottom-nav__icon">ℹ️</span>
+            <span>About</span>
+        </a>
+        <a href="#services" class="bottom-nav__item">
+            <span class="bottom-nav__icon">⚡</span>
+            <span>サービス</span>
+        </a>
+        <a href="#contact" class="bottom-nav__item">
+            <span class="bottom-nav__icon">📧</span>
+            <span>お問合せ</span>
+        </a>
+    </nav>
     
     <script>
         'use strict';
         
+        // ニューラルネットワーク背景
         const canvas = document.getElementById('neural-canvas');
         const ctx = canvas.getContext('2d');
         
-        // Canvas サイズ設定
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -198,26 +711,23 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         
-        // ダークモード検出
-        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const nodeColor = isDarkMode ? 'rgba(107, 182, 255, 0.25)' : 'rgba(74, 144, 226, 0.3)';
-        const lineColor = isDarkMode ? 'rgba(107, 182, 255, 0.08)' : 'rgba(74, 144, 226, 0.08)';
-        const glowColor = isDarkMode ? 'rgba(107, 182, 255, 0.15)' : 'rgba(74, 144, 226, 0.15)';
+        const nodeColor = 'rgba(107, 182, 255, 0.15)';
+        const lineColor = 'rgba(107, 182, 255, 0.03)';
+        const glowColor = 'rgba(107, 182, 255, 0.1)';
         
-        // ノードクラス
         class Node {
             constructor(x, y) {
                 this.x = x || Math.random() * canvas.width;
                 this.y = y || Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.radius = Math.random() * 2 + 1;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.radius = Math.random() * 1.5 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.3;
             }
             
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                
                 if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
             }
@@ -225,104 +735,126 @@
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = nodeColor;
+                ctx.fillStyle = nodeColor.replace('0.15', this.opacity * 0.15);
                 ctx.fill();
-                
-                // グロー効果（控えめ）
-                ctx.shadowBlur = 5;
+                ctx.shadowBlur = 3;
                 ctx.shadowColor = glowColor;
                 ctx.fill();
                 ctx.shadowBlur = 0;
             }
         }
         
-        // ノード配列
         const nodes = [];
-        const nodeCount = Math.floor((canvas.width * canvas.height) / 15000);
+        const nodeCount = Math.floor((canvas.width * canvas.height) / 20000);
         for (let i = 0; i < nodeCount; i++) {
             nodes.push(new Node());
         }
         
-        // マウス位置
         let mouseNode = { x: null, y: null };
         
-        canvas.addEventListener('mousemove', (e) => {
+        document.addEventListener('mousemove', (e) => {
             mouseNode.x = e.clientX;
             mouseNode.y = e.clientY;
         });
         
-        canvas.addEventListener('mouseleave', () => {
-            mouseNode.x = null;
-            mouseNode.y = null;
-        });
-        
-        // 線を描画
         function drawLines() {
-            const maxDistance = 150;
-            
+            const maxDistance = 120;
             for (let i = 0; i < nodes.length; i++) {
                 for (let j = i + 1; j < nodes.length; j++) {
                     const dx = nodes[i].x - nodes[j].x;
                     const dy = nodes[i].y - nodes[j].y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    
                     if (distance < maxDistance) {
-                        const opacity = (1 - distance / maxDistance) * 0.15;
-                        ctx.strokeStyle = lineColor.replace('0.08', opacity);
-                        ctx.lineWidth = 0.3;
+                        const opacity = (1 - distance / maxDistance) * 0.05;
+                        ctx.strokeStyle = lineColor.replace('0.03', opacity);
+                        ctx.lineWidth = 0.2;
                         ctx.beginPath();
                         ctx.moveTo(nodes[i].x, nodes[i].y);
                         ctx.lineTo(nodes[j].x, nodes[j].y);
                         ctx.stroke();
                     }
                 }
-                
-                // マウスとの接続
-                if (mouseNode.x !== null) {
-                    const dx = nodes[i].x - mouseNode.x;
-                    const dy = nodes[i].y - mouseNode.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < 200) {
-                        const opacity = (1 - distance / 200) * 0.3;
-                        ctx.strokeStyle = nodeColor.replace(isDarkMode ? '0.25' : '0.3', opacity);
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(nodes[i].x, nodes[i].y);
-                        ctx.lineTo(mouseNode.x, mouseNode.y);
-                        ctx.stroke();
-                    }
-                }
             }
         }
         
-        // アニメーションループ
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             drawLines();
-            
             nodes.forEach(node => {
                 node.update();
                 node.draw();
             });
-            
-            // マウスノード描画（控えめ）
-            if (mouseNode.x !== null) {
-                ctx.beginPath();
-                ctx.arc(mouseNode.x, mouseNode.y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = nodeColor;
-                ctx.fill();
-                ctx.shadowBlur = 8;
-                ctx.shadowColor = glowColor;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-            
+
             requestAnimationFrame(animate);
         }
-        
         animate();
+        
+
+        // カスタムカーソル（デスクトップのみ）
+        if (window.innerWidth >= 768) {
+            const cursorDot = document.getElementById('cursorDot');
+            const cursorRing = document.getElementById('cursorRing');
+            
+            document.addEventListener('mousemove', (e) => {
+                cursorDot.style.left = e.clientX + 'px';
+                cursorDot.style.top = e.clientY + 'px';
+                cursorRing.style.left = e.clientX + 'px';
+                cursorRing.style.top = e.clientY + 'px';
+            });
+            
+            document.querySelectorAll('a, button, .service-card').forEach(el => {
+                el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+                el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+            });
+        }
+        
+        // ハンバーガーメニュー
+        const hamburger = document.getElementById('hamburger');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        });
+        
+        document.querySelectorAll('.mobile-menu__link').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            });
+        });
+        
+        // ヘッダースクロール非表示
+        let lastScrollY = window.scrollY;
+        const header = document.getElementById('header');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                if (window.scrollY > lastScrollY) {
+                    header.classList.add('hidden');
+                } else {
+                    header.classList.remove('hidden');
+                }
+            }
+            lastScrollY = window.scrollY;
+        }, { passive: true });
+        
+        // ボトムナビゲーションのアクティブ状態
+        const bottomNavItems = document.querySelectorAll('.bottom-nav__item');
+        bottomNavItems.forEach(item => {
+            item.addEventListener('click', () => {
+                bottomNavItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+        
+        // スクロールインジケーター非表示
+        window.addEventListener('scroll', () => {
+            const scrollIndicator = document.querySelector('.scroll-indicator');
+            if (scrollIndicator) {
+                scrollIndicator.style.opacity = window.scrollY > 100 ? '0' : '1';
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>
